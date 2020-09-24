@@ -30,14 +30,17 @@ jobs:
         npm install
         npm run build
 
+    - name: Fetch Neckless
+      run: |
+        curl -L -o ./neckless https://github.com/mabels/neckless/releases/download/v0.1.2/default.neckless-linux-amd64
+        chmod 755 ./neckless
+        ls -l
+        ./neckless version
+
     - name: Publish Entenpreis
       env:
         NECKLESS_PRIVKEY: ${{ secrets.NECKLESS_PRIVKEY }}
       run: |
-        curl -L -o ./neckless https://github.com/mabels/neckless/releases/download/v0.1.2/default.neckless-amd64
-        chmod 755 ./neckless
-        ls -l
-        ./neckless version
         eval $(./neckless kv  ls  --shKeyValue --ghAddMask NPM_PASS  NPM_USER "NPM_TOTP@Totp()")
         env | sort | grep NPM
         token=$(curl -H "npm-otp: $NPM_TOTP" \
