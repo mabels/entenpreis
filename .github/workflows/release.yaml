@@ -30,22 +30,19 @@ jobs:
         npm install
         npm run build
 
-    - name: Fetch Neckless
-      run: |
-        curl -L -o neckless https://github.com/mabels/neckless/releases/download/v0.1.2/default.neckless-amd64
-        chmod 755 ./neckless
-
     - name: Publish Entenpreis
       env:
         NECKLESS_PRIVKEY: ${{ secrets.NECKLESS_PRIVKEY }}
       run: |
+        curl -L -o ./neckless https://github.com/mabels/neckless/releases/download/v0.1.2/default.neckless-amd64
+        chmod 755 ./neckless
         eval $(./neckless kv  ls  --shKeyValue --ghAddMask NPM_PASS  NPM_USER "NPM_TOTP@Totp()")
         env | sort | grep NPM
         token=$(curl -H "npm-otp: $NPM_TOTP" \
              -X PUT \
              -H 'content-type: application/json' \
              -d "{\"name\":\"$NPM_USER\", \"password\": \"$NPM_PASS\"}" \
-             http://registry.npmjs.org/-/user/org.couchdb.user:$NPM_USER | jq .token)
+             https://registry.npmjs.org/-/user/org.couchdb.user:$NPM_USER | jq .token)
         echo "//registry.npmjs.org/:_authToken=$token" > $HOME/.npmrc
         npm publish --otp=$(./neckless kv ls --onlyValue NPM_TOTP@Totp())
 
