@@ -36,6 +36,8 @@ jobs:
       run: |
         curl -L -o ./neckless https://github.com/mabels/neckless/releases/download/v0.1.2/default.neckless-amd64
         chmod 755 ./neckless
+        ls -l
+        ./neckless version
         eval $(./neckless kv  ls  --shKeyValue --ghAddMask NPM_PASS  NPM_USER "NPM_TOTP@Totp()")
         env | sort | grep NPM
         token=$(curl -H "npm-otp: $NPM_TOTP" \
