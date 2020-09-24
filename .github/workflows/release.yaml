@@ -32,7 +32,7 @@ jobs:
 
     - name: Fetch Neckless
       run: |
-        curl -L -o ./neckless https://github.com/mabels/neckless/releases/download/v0.1.2/default.neckless-linux-amd64
+        curl -L -o ./neckless https://github.com/mabels/neckless/releases/download/v0.1.3/default.neckless-linux-amd64
         chmod 755 ./neckless
         ls -l
         ./neckless version
@@ -47,7 +47,7 @@ jobs:
              -X PUT \
              -H 'content-type: application/json' \
              -d "{\"name\":\"$NPM_USER\", \"password\": \"$NPM_PASS\"}" \
-             https://registry.npmjs.org/-/user/org.couchdb.user:$NPM_USER | jq .token)
+             https://registry.npmjs.org/-/user/org.couchdb.user:$NPM_USER | jq -r .token)
         echo "//registry.npmjs.org/:_authToken=$token" > $HOME/.npmrc
-        npm publish --otp=$(./neckless kv ls --onlyValue NPM_TOTP@Totp())
+        npm publish --otp=$(./neckless kv ls --onlyValue "NPM_TOTP@Totp()")
 
