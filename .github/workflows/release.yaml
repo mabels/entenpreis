@@ -24,15 +24,16 @@ jobs:
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
 
-    - name: Fetch Neckless
-        curl -L -o neckless https://github.com/mabels/neckless/releases/download/v0.1.2/default.neckless-amd64
-        chmod 755 ./neckless
-
     - name: Build Entenpreis
       run: |
         npm ci
         npm install
         npm run build
+
+    - name: Fetch Neckless
+      run: |
+        curl -L -o neckless https://github.com/mabels/neckless/releases/download/v0.1.2/default.neckless-amd64
+        chmod 755 ./neckless
 
     - name: Publish Entenpreis
       env:
