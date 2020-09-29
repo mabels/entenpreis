@@ -7,6 +7,7 @@ import ec2 = require("@aws-cdk/aws-ec2");
 import { Tags } from "@aws-cdk/core";
 import { ManagedPolicy } from "@aws-cdk/aws-iam";
 import { HelmChart } from "@aws-cdk/aws-eks";
+import { EKSResult } from './eks-stack';
 
 export interface AutoScalerProps {
   readonly instanceType?: string;
@@ -18,12 +19,12 @@ export interface AutoScalerProps {
 
 export function autoscaler(
   stack: cdk.Stack,
-  eksCluster: eks.Cluster,
+  eksr: EKSResult,
   props: AutoScalerProps
 ) {
   const workerRole = new iam.Role(
     stack,
-    `EKSWorkerRole-${eksCluster.clusterName}`,
+    `EKSWorkerRole-${eksr.props.baseName}`,
     {
       assumedBy: new iam.ServicePrincipal("ec2.amazonaws.com"),
     }
@@ -33,9 +34,9 @@ export function autoscaler(
   );
   const onDemandASG = new autoscaling.AutoScalingGroup(
     stack,
-    `OnDemandASG-${eksCluster.clusterName}`,
+    `OnDemandASG-${eks}`,
     {
-      vpc: eksCluster.vpc,
+      vpc: eksr.eks.vpc,
       role: workerRole,
       minCapacity: props.minCapacity || 1,
       maxCapacity: 10,
@@ -49,7 +50,7 @@ export function autoscaler(
   );
 
   Tags.of(onDemandASG).add(
-    `k8s.io/cluster-autoscaler/${eksCluster.clusterName}`,
+    `k8s.io/cluster-autoscaler/${eksr.props.baseName}`,
     "owned",
     {
       applyToLaunchedInstances: true,
@@ -58,16 +59,16 @@ export function autoscaler(
   Tags.of(onDemandASG).add("k8s.io/cluster-autoscaler/enabled", "owned", {
     applyToLaunchedInstances: true,
   });
-  eksCluster.addAutoScalingGroup(onDemandASG, {});
+  eksr.eks.addAutoScalingGroup(onDemandASG, {});
 
   const autoscalerNS = props.autoscalerNamespace || "kuber";
-  const kuberNS = eksCluster.addManifest(autoscalerNS, {
+  const kuberNS = eksr.eks.addManifest(autoscalerNS, {
     apiVersion: "v1",
     kind: "Namespace",
     metadata: { name: autoscalerNS },
   });
-  const kuberAdmin = eksCluster.addServiceAccount(
-    `${autoscalerNS}-${eksCluster.clusterName}`,
+  const kuberAdmin = eksr.eks.addServiceAccount(
+    `${autoscalerNS}-${eksr.props.baseName}`,
     {
       name: autoscalerNS,
       namespace: autoscalerNS,
@@ -78,7 +79,7 @@ export function autoscaler(
   kuberAdmin.role.addManagedPolicy(
     ManagedPolicy.fromAwsManagedPolicyName("AdministratorAccess")
   );
-  eksCluster.addManifest("kuber-cluster-role-binding", {
+  eksr.eks.addManifest("kuber-cluster-role-binding", {
     apiVersion: "rbac.authorization.k8s.io/v1beta1",
     kind: "ClusterRoleBinding",
     metadata: {
@@ -99,7 +100,7 @@ export function autoscaler(
   });
 
   new HelmChart(stack, "autoscaler", {
-    cluster: eksCluster,
+    cluster: eksr.eks,
     release: "autoscaler",
     namespace: kuberAdmin.serviceAccountNamespace,
     chart: "cluster-autoscaler-chart",
@@ -108,7 +109,7 @@ export function autoscaler(
     values: {
       awsRegion: stack.region,
       autoDiscovery: {
-        clusterName: eksCluster.clusterName,
+        clusterName: eksr.eks.clusterName,
       },
       rbac: {
         serviceAccount: {

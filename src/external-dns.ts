@@ -2,7 +2,7 @@ import route53 = require("@aws-cdk/aws-route53");
 import cdk = require("@aws-cdk/core");
 import eks = require("@aws-cdk/aws-eks");
 import iam = require("@aws-cdk/aws-iam");
-import { EKSProps } from "./eks-stack";
+import { EKSResult } from "./eks-stack";
 import { PolicyStatement } from "@aws-cdk/aws-iam";
 
 export interface ExternalDNSProps {
@@ -11,10 +11,10 @@ export interface ExternalDNSProps {
   readonly zones: route53.PublicHostedZone[];
 }
 
-export function externalDNS(eksCluster: eks.Cluster, props: ExternalDNSProps) {
+export function externalDNS(eksr: EKSResult, props: ExternalDNSProps) {
   const toolsNS = props.externalDnsNamespace || "kuber";
 
-  const dnsAdmin = eksCluster.addServiceAccount(`${toolsNS}-externalDNS`, {
+  const dnsAdmin = eksr.eks.addServiceAccount(`${toolsNS}-externalDNS`, {
     name: `${toolsNS}-externalDNS`,
     namespace: toolsNS,
   });
@@ -33,8 +33,7 @@ export function externalDNS(eksCluster: eks.Cluster, props: ExternalDNSProps) {
       resources: ["*"],
     })
   );
-  eksCluster
-    .addManifest(`${toolsNS}-externalDNS-role-binding`, {
+  eksr.eks.addManifest(`${toolsNS}-externalDNS-role-binding`, {
       apiVersion: "rbac.authorization.k8s.io/v1beta1",
       kind: "ClusterRoleBinding",
       metadata: {
@@ -55,7 +54,7 @@ export function externalDNS(eksCluster: eks.Cluster, props: ExternalDNSProps) {
     })
     .node.addDependency(dnsAdmin);
 
-  eksCluster.addManifest(`${toolsNS}-externalDNS-cluster-role`, {
+  eksr.eks.addManifest(`${toolsNS}-externalDNS-cluster-role`, {
     apiVersion: "rbac.authorization.k8s.io/v1beta1",
     kind: "ClusterRole",
     metadata: { name: `${toolsNS}-externalDNS` },
@@ -81,8 +80,7 @@ export function externalDNS(eksCluster: eks.Cluster, props: ExternalDNSProps) {
   const externalDnsImage =
     props.externalDnsImage ||
     "registry.opensource.zalan.do/teapot/external-dns:latest";
-  eksCluster
-    .addManifest(`${toolsNS}-externalDNS-deployment`, {
+  eksr.eks.addManifest(`${toolsNS}-externalDNS-deployment`, {
       apiVersion: "apps/v1",
       kind: "Deployment",
       metadata: {

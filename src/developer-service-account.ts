@@ -1,23 +1,24 @@
 import eks = require("@aws-cdk/aws-eks");
 import { ManagedPolicy } from "@aws-cdk/aws-iam";
+import { EKSResult } from './eks-stack';
 
 export interface DeveloperServiceAccountProps {
   readonly developerNS?: string;
 }
 
 export function developerServiceAccount(
-  eksCluster: eks.Cluster,
+  eksr: EKSResult,
   props: DeveloperServiceAccountProps
 ) {
   const developerNS = props.developerNS || "developer";
 
-  const devAdmin = eksCluster.addServiceAccount(`${developerNS}`, {
+  const devAdmin = eksr.eks.addServiceAccount(`${developerNS}`, {
     name: developerNS,
     namespace: developerNS,
   });
 
-  const nsDeveloper = eksCluster.addManifest(
-    `NS-${developerNS}-${eksCluster.clusterName}`,
+  const nsDeveloper = eksr.eks.addManifest(
+    `NS-${developerNS}-${eksr.props.baseName}`,
     {
       apiVersion: "v1",
       kind: "Namespace",
@@ -30,7 +31,7 @@ export function developerServiceAccount(
     ManagedPolicy.fromAwsManagedPolicyName("AdministratorAccess")
   );
 
-  eksCluster.addManifest(`${developerNS}-cluster-role-binding`, {
+  eksr.eks.addManifest(`${developerNS}-cluster-role-binding`, {
     apiVersion: "rbac.authorization.k8s.io/v1beta1",
     kind: "ClusterRoleBinding",
     metadata: {

@@ -1,5 +1,6 @@
 import eks = require("@aws-cdk/aws-eks");
 import route53 = require("@aws-cdk/aws-route53");
+import { EKSResult } from './eks-stack';
 
 export interface GithubWorkerProps {
   readonly replicaCount?: number;
@@ -11,17 +12,17 @@ export interface GithubWorkerProps {
 }
 
 export function githubWorker(
-  eksCluster: eks.Cluster,
+  eksr: EKSResult,
   zones: route53.PublicHostedZone[],
   serviceAccount: eks.ServiceAccount,
   props: GithubWorkerProps
 ) {
   const url = new URL(props.url);
-  const workerName = `${eksCluster.clusterName}-${url.port.replace(
+  const workerName = `${eksr.props.baseName}-${url.port.replace(
     /[\/\.]+/,
     "-"
   )}`;
-  eksCluster.addManifest(`Deployment-${workerName}`, {
+  eksr.eks.addManifest(`Deployment-${workerName}`, {
     apiVersion: "apps/v1",
     kind: "Deployment",
     metadata: {
@@ -86,7 +87,7 @@ export function githubWorker(
                   name: "RUNNER_LABELS",
                   value: [
                     ...(props.labels || []),
-                    eksCluster.clusterName,
+                    eksr.props.baseName,
                     ...zones.map((i) => i.zoneName),
                   ].join(","),
                 },

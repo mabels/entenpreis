@@ -1,6 +1,7 @@
 import eks = require("@aws-cdk/aws-eks");
 import route53 = require("@aws-cdk/aws-route53");
 import { string } from "yargs";
+import { EKSResult } from './eks-stack';
 
 export interface Delegation53Props {
   readonly delegationDnsNamespace?: string;
@@ -9,36 +10,36 @@ export interface Delegation53Props {
   readonly rolesARN: string[];
 }
 export function delegation53(
-  eksCluster: eks.Cluster,
+  eksr: EKSResult,
   props: Delegation53Props
 ) {
   const toolsNS = props.delegationDnsNamespace || "kuber";
 
-  const delegation53SA = eksCluster.addServiceAccount(
-    `Delegation53SA-${eksCluster.clusterName}`,
+  const delegation53SA = eksr.eks.addServiceAccount(
+    `Delegation53SA-${eksr.props.baseName}`,
     {
       name: `${toolsNS}-delegation53`,
       namespace: toolsNS,
     }
   );
-  eksCluster.addManifest(`Delegation53-Deployment-${eksCluster.clusterName}`, {
+  eksr.eks.addManifest(`Delegation53-Deployment-${eksr.props.baseName}`, {
     apiVersion: "apps/v1",
     kind: "deployment",
     metadata: {
-      name: `Delegation53-${eksCluster.clusterName}`,
+      name: `Delegation53-${eksr.props.baseName}`,
       namespace: delegation53SA.serviceAccountNamespace,
     },
     spec: {
       strategy: { type: "Recreate" },
       selector: {
         matchLabels: {
-          app: `Delegation53-${eksCluster.clusterName}`,
+          app: `Delegation53-${eksr.props.baseName}`,
         },
       },
       template: {
         metadata: {
           labels: {
-            app: `Delegation53-${eksCluster.clusterName}`,
+            app: `Delegation53-${eksr.props.baseName}`,
           },
         },
         spec: {
