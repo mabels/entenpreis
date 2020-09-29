@@ -8,8 +8,7 @@ import { ManagedPolicy } from "@aws-cdk/aws-iam";
 
 export interface EKSProps {
   readonly clusterName: string;
-  readonly k8nVersion?: string;
-  readonly EKSk8nVersion?: eks.KubernetesVersion;
+  readonly EKSVersion?: eks.KubernetesVersion;
   readonly cidr?: string;
   readonly vpcId?: string;
   readonly developerNS?: string;
@@ -37,7 +36,7 @@ export function eksStack(stack: cdk.Stack, props: EKSProps) {
     vpc: myVPC,
     kubectlEnabled: true, // we want to be able to manage k8s resources using CDK
     defaultCapacity: 0, // we want to manage capacity our selves
-    version: props.EKSk8nVersion || eks.KubernetesVersion.V1_17,
+    version: props.EKSVersion || eks.KubernetesVersion.V1_17,
   });
 
   eksCluster.addManifest(`${props.clusterName}-gp2-encrypted`, {
