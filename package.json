@@ -1,8 +1,9 @@
 {
   "name": "entenpreis",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "",
   "main": "dist/index.js",
+  "typings": "typings/index.d.ts",
   "engines": {
     "node": ">=12.0.0"
   },
@@ -11,7 +12,7 @@
     "url": "mabels/entenpreis"
   },
   "scripts": {
-    "build": "tsc",	  
+    "build": "tsc",
     "test": ""
   },
   "bugs": {
