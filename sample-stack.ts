@@ -6,11 +6,12 @@ import { externalDNS } from "./src/external-dns";
 import { githubWorker, GithubWorkerProps } from "./src/github-worker";
 import { developerServiceAccount } from "./src/developer-service-account";
 import { autoscaler, AutoScalerProps } from "./src/autoscaler";
+import { EbsDeviceVolumeType } from '@aws-cdk/aws-ec2';
 
 export interface StackProps extends cdk.StackProps {
   readonly createDomains: CreateDomainsProps;
   readonly eksProps: EKSProps;
-  readonly infrastructGithubWorker: GithubWorkerProps;
+  readonly infrastructureGithubWorker: GithubWorkerProps;
   readonly autoscaler: AutoScalerProps;
 }
 
@@ -24,6 +25,28 @@ export class SampleAccount extends cdk.Stack {
     const zones = createDomains(this, props.createDomains);
     externalDNS(eks, { zones });
     // delegation53(eks, { zones, rolesARN: [] })
-    githubWorker(eks, zones, devAdmin, props.infrastructGithubWorker);
+    githubWorker(eks, zones, devAdmin, props.infrastructureGithubWorker);
   }
 }
+
+new SampleAccount(new cdk.App(), 'Sample', {
+  createDomains: {
+    domains: []
+  },
+  eksProps: {
+    baseName: 'Sample'
+  },
+  infrastructureGithubWorker: {
+    url: 'xxx',
+    token: 'xxx',
+    image: 'xxx'
+  },
+  autoscaler: {
+    blockDevices: [
+      {
+        deviceName: '/dev/xxx',
+        size: 200
+      }
+    ]
+  }
+});

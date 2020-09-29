@@ -9,12 +9,18 @@ import { ManagedPolicy } from "@aws-cdk/aws-iam";
 import { HelmChart } from "@aws-cdk/aws-eks";
 import { EKSResult } from './eks-stack';
 
+export interface BlockDevice {
+  readonly deviceName: string;
+  readonly size: number; // in GB
+}
+
 export interface AutoScalerProps {
   readonly instanceType?: string;
   readonly minCapacity?: number;
   readonly k8nVersion?: string;
   readonly autoscalerVersion?: string;
   readonly autoscalerNamespace?: string;
+  readonly blockDevices?: BlockDevice[];
 }
 
 export function autoscaler(
@@ -44,6 +50,12 @@ export function autoscaler(
       machineImage: new eks.EksOptimizedImage({
         kubernetesVersion: props.k8nVersion || "1.17",
         nodeType: eks.NodeType.STANDARD, // without this, incorrect SSM parameter for AMI is resolved
+      }),
+      blockDevices: props.blockDevices?.map(i => {
+        return {
+          deviceName: i.deviceName,
+          volume: autoscaling.BlockDeviceVolume.ebs(i.size)
+        }
       }),
       updateType: autoscaling.UpdateType.ROLLING_UPDATE,
     }
