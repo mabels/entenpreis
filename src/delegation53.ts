@@ -12,6 +12,11 @@ export interface Delegation53Props {
 export function delegation53(eksr: EKSResult, props: Delegation53Props) {
   const toolsNS = props.delegationDnsNamespace || 'kuber';
 
+  const ns = eksr.eks.addManifest(`NS-${eksr.props.baseName}-${toolsNS}`, {
+    apiVersion: 'v1',
+    kind: 'Namespace',
+    metadata: { name: toolsNS },
+  });
   const delegation53SA = eksr.eks.addServiceAccount(
     `SA-${eksr.props.baseName}-${toolsNS}-delegation53`,
     {
@@ -19,6 +24,7 @@ export function delegation53(eksr: EKSResult, props: Delegation53Props) {
       namespace: toolsNS,
     },
   );
+  delegation53SA.node.addDependency(ns);
   eksr.eks.addManifest(`Deployment-${eksr.props.baseName}-${toolsNS}-delegation53`, {
     apiVersion: 'apps/v1',
     kind: 'deployment',
@@ -69,6 +75,5 @@ export function delegation53(eksr: EKSResult, props: Delegation53Props) {
         },
       },
     },
-  });
-  //   .node.addDependency(nsExternal);
+  }).node.addDependency(delegation53SA);
 }

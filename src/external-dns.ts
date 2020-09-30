@@ -14,10 +14,17 @@ export interface ExternalDNSProps {
 export function externalDNS(eksr: EKSResult, props: ExternalDNSProps) {
   const toolsNS = props.externalDnsNamespace || 'kuber';
 
+  const ns = eksr.eks.addManifest(`NS-${eksr.props.baseName}-${toolsNS}`, {
+    apiVersion: 'v1',
+    kind: 'Namespace',
+    metadata: { name: toolsNS },
+  });
+
   const dnsAdmin = eksr.eks.addServiceAccount(`SA-${eksr.props.baseName}-${toolsNS}-externaldns`, {
     name: `${toolsNS}-externaldns`,
     namespace: toolsNS,
   });
+  dnsAdmin.node.addDependency(ns);
 
   dnsAdmin.addToPolicy(
     new PolicyStatement({
@@ -76,7 +83,7 @@ export function externalDNS(eksr: EKSResult, props: ExternalDNSProps) {
         verbs: ['list', 'watch'],
       },
     ],
-  });
+  }).node.addDependency(dnsAdmin);
 
   const externalDnsImage =
     props.externalDnsImage || 'registry.opensource.zalan.do/teapot/external-dns:latest';
