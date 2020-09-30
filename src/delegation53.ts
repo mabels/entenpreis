@@ -16,30 +16,30 @@ export function delegation53(
   const toolsNS = props.delegationDnsNamespace || "kuber";
 
   const delegation53SA = eksr.eks.addServiceAccount(
-    `Delegation53SA-${eksr.props.baseName}`,
+    `SA-${eksr.props.baseName}-${toolsNS}-delegation53`,
     {
       name: `${toolsNS}-delegation53`,
       namespace: toolsNS,
     }
   );
-  eksr.eks.addManifest(`Delegation53-Deployment-${eksr.props.baseName}`, {
+  eksr.eks.addManifest(`Deployment-${eksr.props.baseName}-${toolsNS}-delegation53`, {
     apiVersion: "apps/v1",
     kind: "deployment",
     metadata: {
-      name: `Delegation53-${eksr.props.baseName}`,
+      name: `${toolsNS}-delegation53`,
       namespace: delegation53SA.serviceAccountNamespace,
     },
     spec: {
       strategy: { type: "Recreate" },
       selector: {
         matchLabels: {
-          app: `Delegation53-${eksr.props.baseName}`,
+          app: `${toolsNS}-delegation53`,
         },
       },
       template: {
         metadata: {
           labels: {
-            app: `Delegation53-${eksr.props.baseName}`,
+            app: `${toolsNS}-delegation53`,
           },
         },
         spec: {

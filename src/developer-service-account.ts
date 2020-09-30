@@ -12,13 +12,13 @@ export function developerServiceAccount(
 ) {
   const developerNS = props.developerNS || "developer";
 
-  const devAdmin = eksr.eks.addServiceAccount(`${developerNS}`, {
+  const devAdmin = eksr.eks.addServiceAccount(`SA-${eksr.props.baseName}-${developerNS}-developer`, {
     name: developerNS,
     namespace: developerNS,
   });
 
   const nsDeveloper = eksr.eks.addManifest(
-    `NS-${developerNS}-${eksr.props.baseName}`,
+    `NS-${eksr.props.baseName}-${developerNS}`,
     {
       apiVersion: "v1",
       kind: "Namespace",
@@ -31,11 +31,11 @@ export function developerServiceAccount(
     ManagedPolicy.fromAwsManagedPolicyName("AdministratorAccess")
   );
 
-  eksr.eks.addManifest(`${developerNS}-cluster-role-binding`, {
+  eksr.eks.addManifest(`CRB-${eksr.props.baseName}-${developerNS}-binding`, {
     apiVersion: "rbac.authorization.k8s.io/v1beta1",
     kind: "ClusterRoleBinding",
     metadata: {
-      name: `${developerNS}-cluster-role-binding`,
+      name: `${developerNS}-binding`,
     },
     roleRef: {
       apiGroup: "rbac.authorization.k8s.io",

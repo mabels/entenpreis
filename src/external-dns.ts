@@ -1,9 +1,9 @@
-import route53 = require("@aws-cdk/aws-route53");
-import cdk = require("@aws-cdk/core");
-import eks = require("@aws-cdk/aws-eks");
-import iam = require("@aws-cdk/aws-iam");
-import { EKSResult } from "./eks-stack";
-import { PolicyStatement } from "@aws-cdk/aws-iam";
+import route53 = require('@aws-cdk/aws-route53');
+import cdk = require('@aws-cdk/core');
+import eks = require('@aws-cdk/aws-eks');
+import iam = require('@aws-cdk/aws-iam');
+import { EKSResult } from './eks-stack';
+import { PolicyStatement } from '@aws-cdk/aws-iam';
 
 export interface ExternalDNSProps {
   readonly externalDnsNamespace?: string; // default external
@@ -12,41 +12,42 @@ export interface ExternalDNSProps {
 }
 
 export function externalDNS(eksr: EKSResult, props: ExternalDNSProps) {
-  const toolsNS = props.externalDnsNamespace || "kuber";
+  const toolsNS = props.externalDnsNamespace || 'kuber';
 
-  const dnsAdmin = eksr.eks.addServiceAccount(`${toolsNS}-externalDNS`, {
-    name: `${toolsNS}-externalDNS`,
+  const dnsAdmin = eksr.eks.addServiceAccount(`SA-${eksr.props.baseName}-${toolsNS}-externaldns`, {
+    name: `${toolsNS}-externaldns`,
     namespace: toolsNS,
   });
 
   dnsAdmin.addToPolicy(
     new PolicyStatement({
       effect: iam.Effect.ALLOW,
-      actions: ["route53:ChangeResourceRecordSets"],
-      resources: ["arn:aws:route53:::hostedzone/*"],
-    })
+      actions: ['route53:ChangeResourceRecordSets'],
+      resources: ['arn:aws:route53:::hostedzone/*'],
+    }),
   );
   dnsAdmin.addToPolicy(
     new PolicyStatement({
       effect: iam.Effect.ALLOW,
-      actions: ["route53:ListHostedZones", "route53:ListResourceRecordSets"],
-      resources: ["*"],
-    })
+      actions: ['route53:ListHostedZones', 'route53:ListResourceRecordSets'],
+      resources: ['*'],
+    }),
   );
-  eksr.eks.addManifest(`${toolsNS}-externalDNS-role-binding`, {
-      apiVersion: "rbac.authorization.k8s.io/v1beta1",
-      kind: "ClusterRoleBinding",
+  eksr.eks
+    .addManifest(`CBR-${eksr.props.baseName}-${toolsNS}-viewer`, {
+      apiVersion: 'rbac.authorization.k8s.io/v1beta1',
+      kind: 'ClusterRoleBinding',
       metadata: {
-        name: `${toolsNS}-externalDNS-viewer`,
+        name: `${toolsNS}-externaldns-viewer`,
       },
       roleRef: {
-        apiGroup: "rbac.authorization.k8s.io",
-        kind: "ClusterRole",
+        apiGroup: 'rbac.authorization.k8s.io',
+        kind: 'ClusterRole',
         name: dnsAdmin.serviceAccountName,
       },
       subjects: [
         {
-          kind: "ServiceAccount",
+          kind: 'ServiceAccount',
           name: dnsAdmin.serviceAccountName,
           namespace: dnsAdmin.serviceAccountNamespace,
         },
@@ -54,65 +55,65 @@ export function externalDNS(eksr: EKSResult, props: ExternalDNSProps) {
     })
     .node.addDependency(dnsAdmin);
 
-  eksr.eks.addManifest(`${toolsNS}-externalDNS-cluster-role`, {
-    apiVersion: "rbac.authorization.k8s.io/v1beta1",
-    kind: "ClusterRole",
-    metadata: { name: `${toolsNS}-externalDNS` },
+  eksr.eks.addManifest(`CR-${eksr.props.baseName}-${toolsNS}-viewer`, {
+    apiVersion: 'rbac.authorization.k8s.io/v1beta1',
+    kind: 'ClusterRole',
+    metadata: { name: `${toolsNS}-externaldns-viewer` },
     rules: [
       {
-        apiGroups: [""],
-        resources: ["services", "endpoints", "pods"],
-        verbs: ["get", "watch", "list"],
+        apiGroups: [''],
+        resources: ['services', 'endpoints', 'pods'],
+        verbs: ['get', 'watch', 'list'],
       },
       {
-        apiGroups: ["extensions", "networking.k8s.io"],
-        resources: ["ingresses"],
-        verbs: ["get", "watch", "list"],
+        apiGroups: ['extensions', 'networking.k8s.io'],
+        resources: ['ingresses'],
+        verbs: ['get', 'watch', 'list'],
       },
       {
-        apiGroups: [""],
-        resources: ["nodes"],
-        verbs: ["list", "watch"],
+        apiGroups: [''],
+        resources: ['nodes'],
+        verbs: ['list', 'watch'],
       },
     ],
   });
 
   const externalDnsImage =
-    props.externalDnsImage ||
-    "registry.opensource.zalan.do/teapot/external-dns:latest";
-  eksr.eks.addManifest(`${toolsNS}-externalDNS-deployment`, {
-      apiVersion: "apps/v1",
-      kind: "Deployment",
+    props.externalDnsImage || 'registry.opensource.zalan.do/teapot/external-dns:latest';
+  eksr.eks
+    .addManifest(`Deployment-${eksr.props.baseName}-${toolsNS}-externaldns`, {
+      apiVersion: 'apps/v1',
+      kind: 'Deployment',
       metadata: {
-        name: `externalDNS`,
+        name: `${toolsNS}-externaldns`,
         namespace: dnsAdmin.serviceAccountNamespace,
       },
       spec: {
-        strategy: { type: "Recreate" },
+        strategy: { type: 'Recreate' },
         selector: {
           matchLabels: {
-            app: `externalDNS`,
+            app: `${toolsNS}-externaldns`,
           },
         },
         template: {
           metadata: {
             labels: {
-              app: `externalDNS`,
+              app: `${toolsNS}-externaldns`,
             },
           },
           spec: {
             serviceAccount: dnsAdmin.serviceAccountName,
             containers: props.zones.map((zone) => ({
-              name: `edns-${zone.zoneName.replace(/\./g, "-")}`,
+              name: `edns-${zone.zoneName.replace(/\./g, '-')}`,
               image: externalDnsImage,
               args: [
-                "--source=service",
-                "--source=ingress",
+                '--source=service',
+                '--source=ingress',
                 `--domain-filter=${zone.zoneName}`,
-                "--provider=aws",
-                "--policy=upsert-only",
-                "--aws-zone-type=public",
-                "--registry=txt",
+                '--provider=aws',
+                '--policy=upsert-only',
+                '--aws-zone-type=public',
+                '--registry=txt',
                 `--txt-owner-id=${zone.hostedZoneId}`,
               ],
             })),

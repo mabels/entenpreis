@@ -22,14 +22,14 @@ export function githubWorker(
     /[\/\.]+/,
     "-"
   )}`;
-  eksr.eks.addManifest(`Deployment-${workerName}`, {
+  eksr.eks.addManifest(`Deployment-${eksr.props.baseName}-${workerName}`, {
     apiVersion: "apps/v1",
     kind: "Deployment",
     metadata: {
       name: workerName,
       namespace: serviceAccount.serviceAccountNamespace,
       labels: {
-        "app.kubernetes.io/name": workerName,
+        "app.kubernetes.io/name": `github-worker-${workerName}`,
       },
     },
     spec: {
@@ -39,16 +39,16 @@ export function githubWorker(
       },
       selector: {
         matchLabels: {
-          "app.kubernetes.io/name": workerName,
-          "app.kubernetes.io/instance": workerName,
+          "app.kubernetes.io/name": `github-worker-${workerName}`,
+          "app.kubernetes.io/instance": `github-worker-${workerName}`,
         },
       },
       template: {
         metadata: {
           annotations: {},
           labels: {
-            "app.kubernetes.io/name": workerName,
-            "app.kubernetes.io/instance": workerName,
+            "app.kubernetes.io/name": `github-worker-${workerName}`,
+            "app.kubernetes.io/instance": `github-worker-${workerName}`,
           },
         },
         spec: {

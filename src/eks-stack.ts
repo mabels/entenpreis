@@ -30,12 +30,12 @@ export function eksStack(stack: cdk.Stack, props: EKSProps): EKSResult {
     throw Error("we need a vpcid or cidr")
   }
 
-  const clusterAdmin = new iam.Role(stack, `AdminRole-${props.baseName}`, {
+  const clusterAdmin = new iam.Role(stack, `Role-${props.baseName}-clusterAdmin`, {
     assumedBy: new iam.AccountRootPrincipal(),
   });
 
-  const eksCluster = new eks.Cluster(stack, `Cluster-${props.baseName}`, {
-    clusterName: `EKS-${props.baseName}`,
+  const eksCluster = new eks.Cluster(stack, `EKS-${props.baseName}`, {
+    clusterName: `${props.baseName}`,
     mastersRole: clusterAdmin,
     vpc: myVPC,
     kubectlEnabled: true, // we want to be able to manage k8s resources using CDK
@@ -43,7 +43,7 @@ export function eksStack(stack: cdk.Stack, props: EKSProps): EKSResult {
     version: props.EKSVersion || eks.KubernetesVersion.V1_17,
   });
 
-  eksCluster.addManifest(`${props.baseName}-gp2-encrypted`, {
+  eksCluster.addManifest(`SC-${props.baseName}-gp2-encrypted`, {
     apiVersion: "storage.k8s.io/v1",
     kind: "StorageClass",
     metadata: {

@@ -30,7 +30,7 @@ export function autoscaler(
 ) {
   const workerRole = new iam.Role(
     stack,
-    `EKSWorkerRole-${eksr.props.baseName}`,
+    `Role-${eksr.props.baseName}-Worker`,
     {
       assumedBy: new iam.ServicePrincipal("ec2.amazonaws.com"),
     }
@@ -40,7 +40,7 @@ export function autoscaler(
   );
   const onDemandASG = new autoscaling.AutoScalingGroup(
     stack,
-    `OnDemandASG-${eks}`,
+    `ASG-${eksr.props.baseName}`,
     {
       vpc: eksr.eks.vpc,
       role: workerRole,
@@ -74,28 +74,28 @@ export function autoscaler(
   eksr.eks.addAutoScalingGroup(onDemandASG, {});
 
   const autoscalerNS = props.autoscalerNamespace || "kuber";
-  const kuberNS = eksr.eks.addManifest(autoscalerNS, {
+  const kuberNS = eksr.eks.addManifest(`NS-${eksr.props.baseName}-${autoscalerNS}`, {
     apiVersion: "v1",
     kind: "Namespace",
     metadata: { name: autoscalerNS },
   });
-  const kuberAdmin = eksr.eks.addServiceAccount(
-    `${autoscalerNS}-${eksr.props.baseName}`,
+  const clusterAS = eksr.eks.addServiceAccount(
+    `SA-${eksr.props.baseName}-clusterAS`,
     {
       name: autoscalerNS,
       namespace: autoscalerNS,
     }
   );
-  kuberAdmin.node.addDependency(kuberNS);
+  clusterAS.node.addDependency(kuberNS);
 
-  kuberAdmin.role.addManagedPolicy(
+  clusterAS.role.addManagedPolicy(
     ManagedPolicy.fromAwsManagedPolicyName("AdministratorAccess")
   );
-  eksr.eks.addManifest("kuber-cluster-role-binding", {
+  eksr.eks.addManifest(`CRB-${eksr.props.baseName}-clusterAS`, {
     apiVersion: "rbac.authorization.k8s.io/v1beta1",
     kind: "ClusterRoleBinding",
     metadata: {
-      name: "kuber-cluster-role-binding",
+      name: `${eksr.props.baseName}-clusterAS`,
     },
     roleRef: {
       apiGroup: "rbac.authorization.k8s.io",
@@ -105,16 +105,16 @@ export function autoscaler(
     subjects: [
       {
         kind: "ServiceAccount",
-        name: kuberAdmin.serviceAccountName,
-        namespace: kuberAdmin.serviceAccountNamespace,
+        name: clusterAS.serviceAccountName,
+        namespace: clusterAS.serviceAccountNamespace,
       },
     ],
   });
 
-  new HelmChart(stack, "autoscaler", {
+  new HelmChart(stack, `HELM-${eksr.props.baseName}-autoscaler`, {
     cluster: eksr.eks,
     release: "autoscaler",
-    namespace: kuberAdmin.serviceAccountNamespace,
+    namespace: clusterAS.serviceAccountNamespace,
     chart: "cluster-autoscaler-chart",
     repository: "https://kubernetes.github.io/autoscaler",
     version: props.autoscalerVersion || "1.0.1",
@@ -126,7 +126,7 @@ export function autoscaler(
       rbac: {
         serviceAccount: {
           create: false,
-          name: kuberAdmin.serviceAccountName,
+          name: clusterAS.serviceAccountName,
         },
       },
     },
