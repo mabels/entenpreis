@@ -1,9 +1,9 @@
 // import * as path from 'path'
 
-import iam = require("@aws-cdk/aws-iam");
-import ec2 = require("@aws-cdk/aws-ec2");
-import eks = require("@aws-cdk/aws-eks");
-import cdk = require("@aws-cdk/core");
+import iam = require('@aws-cdk/aws-iam');
+import ec2 = require('@aws-cdk/aws-ec2');
+import eks = require('@aws-cdk/aws-eks');
+import cdk = require('@aws-cdk/core');
 
 export interface EKSProps {
   readonly baseName: string;
@@ -21,13 +21,13 @@ export interface EKSResult {
 export function eksStack(stack: cdk.Stack, props: EKSProps): EKSResult {
   let myVPC: ec2.IVpc;
   if (props.vpcId) {
-    myVPC = ec2.Vpc.fromLookup(stack, `VPC-${props.baseName}`, {vpcId: props.vpcId});
+    myVPC = ec2.Vpc.fromLookup(stack, `VPC-${props.baseName}`, { vpcId: props.vpcId });
   } else if (props.cidr) {
     myVPC = new ec2.Vpc(stack, `VPC-${props.baseName}`, {
       cidr: props.cidr,
     });
   } else {
-    throw Error("we need a vpcid or cidr")
+    throw Error('we need a vpcid or cidr');
   }
 
   const clusterAdmin = new iam.Role(stack, `Role-${props.baseName}-clusterAdmin`, {
@@ -44,21 +44,21 @@ export function eksStack(stack: cdk.Stack, props: EKSProps): EKSResult {
   });
 
   eksCluster.addManifest(`SC-${props.baseName}-gp2-encrypted`, {
-    apiVersion: "storage.k8s.io/v1",
-    kind: "StorageClass",
+    apiVersion: 'storage.k8s.io/v1',
+    kind: 'StorageClass',
     metadata: {
-      name: "gp2-encrypted",
+      name: 'gp2-encrypted',
     },
-    provisioner: "kubernetes.io/aws-ebs",
+    provisioner: 'kubernetes.io/aws-ebs',
     parameters: {
-      type: "gp2",
-      encrypted: "true",
+      type: 'gp2',
+      encrypted: 'true',
     },
-    reclaimPolicy: "Retain",
+    reclaimPolicy: 'Retain',
     allowVolumeExpansion: true,
   });
   return {
     props,
-    eks: eksCluster
-  }
+    eks: eksCluster,
+  };
 }

@@ -8,7 +8,7 @@ import { PolicyStatement } from '@aws-cdk/aws-iam';
 export interface ExternalDNSProps {
   readonly externalDnsNamespace?: string; // default external
   readonly externalDnsImage?: string; // default registry.opensource.zalan.do/teapot/external-dns:latest
-  readonly zones: route53.PublicHostedZone[];
+  readonly zones: route53.IPublicHostedZone[];
 }
 
 export function externalDNS(eksr: EKSResult, props: ExternalDNSProps) {
@@ -104,7 +104,7 @@ export function externalDNS(eksr: EKSResult, props: ExternalDNSProps) {
           spec: {
             serviceAccount: dnsAdmin.serviceAccountName,
             containers: props.zones.map((zone) => ({
-              name: `edns-${zone.zoneName.replace(/\./g, '-')}`,
+              name: `edns-${zone.zoneName.replace(/\.+/g, '-')}`,
               image: externalDnsImage,
               args: [
                 '--source=service',

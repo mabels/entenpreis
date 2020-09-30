@@ -30,9 +30,7 @@ export class SampleAccount extends cdk.Stack {
 }
 
 new SampleAccount(new cdk.App(), 'Sample', {
-  createDomains: {
-    domains: []
-  },
+  createDomains: { },
   eksProps: {
     baseName: 'Sample'
   },
