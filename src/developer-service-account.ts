@@ -9,6 +9,12 @@ export interface DeveloperServiceAccountProps {
 export function developerServiceAccount(eksr: EKSResult, props: DeveloperServiceAccountProps) {
   const developerNS = props.developerNS || 'developer';
 
+  const nsDeveloper = eksr.eks.addManifest(`NS-${eksr.props.baseName}-${developerNS}-developer`, {
+    apiVersion: 'v1',
+    kind: 'Namespace',
+    metadata: { name: developerNS },
+  });
+
   const devAdmin = eksr.eks.addServiceAccount(
     `SA-${eksr.props.baseName}-${developerNS}-developer`,
     {
@@ -16,12 +22,6 @@ export function developerServiceAccount(eksr: EKSResult, props: DeveloperService
       namespace: developerNS,
     },
   );
-
-  const nsDeveloper = eksr.eks.addManifest(`NS-${eksr.props.baseName}-${developerNS}-developer`, {
-    apiVersion: 'v1',
-    kind: 'Namespace',
-    metadata: { name: developerNS },
-  });
   devAdmin.node.addDependency(nsDeveloper);
 
   devAdmin.role.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess'));
@@ -44,6 +44,6 @@ export function developerServiceAccount(eksr: EKSResult, props: DeveloperService
         namespace: devAdmin.serviceAccountNamespace,
       },
     ],
-  });
+  }).node.addDependency(devAdmin);
   return devAdmin;
 }
