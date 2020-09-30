@@ -14,7 +14,7 @@ export interface ExternalDNSProps {
 export function externalDNS(eksr: EKSResult, props: ExternalDNSProps) {
   const toolsNS = props.externalDnsNamespace || 'kuber';
 
-  const ns = eksr.eks.addManifest(`NS-${eksr.props.baseName}-${toolsNS}`, {
+  const ns = eksr.eks.addManifest(`NS-${eksr.props.baseName}-${toolsNS}-externaldns`, {
     apiVersion: 'v1',
     kind: 'Namespace',
     metadata: { name: toolsNS },
@@ -62,28 +62,30 @@ export function externalDNS(eksr: EKSResult, props: ExternalDNSProps) {
     })
     .node.addDependency(dnsAdmin);
 
-  eksr.eks.addManifest(`CR-${eksr.props.baseName}-${toolsNS}-viewer`, {
-    apiVersion: 'rbac.authorization.k8s.io/v1beta1',
-    kind: 'ClusterRole',
-    metadata: { name: `${toolsNS}-externaldns-viewer` },
-    rules: [
-      {
-        apiGroups: [''],
-        resources: ['services', 'endpoints', 'pods'],
-        verbs: ['get', 'watch', 'list'],
-      },
-      {
-        apiGroups: ['extensions', 'networking.k8s.io'],
-        resources: ['ingresses'],
-        verbs: ['get', 'watch', 'list'],
-      },
-      {
-        apiGroups: [''],
-        resources: ['nodes'],
-        verbs: ['list', 'watch'],
-      },
-    ],
-  }).node.addDependency(dnsAdmin);
+  eksr.eks
+    .addManifest(`CR-${eksr.props.baseName}-${toolsNS}-viewer`, {
+      apiVersion: 'rbac.authorization.k8s.io/v1beta1',
+      kind: 'ClusterRole',
+      metadata: { name: `${toolsNS}-externaldns-viewer` },
+      rules: [
+        {
+          apiGroups: [''],
+          resources: ['services', 'endpoints', 'pods'],
+          verbs: ['get', 'watch', 'list'],
+        },
+        {
+          apiGroups: ['extensions', 'networking.k8s.io'],
+          resources: ['ingresses'],
+          verbs: ['get', 'watch', 'list'],
+        },
+        {
+          apiGroups: [''],
+          resources: ['nodes'],
+          verbs: ['list', 'watch'],
+        },
+      ],
+    })
+    .node.addDependency(dnsAdmin);
 
   const externalDnsImage =
     props.externalDnsImage || 'registry.opensource.zalan.do/teapot/external-dns:latest';

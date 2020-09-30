@@ -12,7 +12,7 @@ export interface Delegation53Props {
 export function delegation53(eksr: EKSResult, props: Delegation53Props) {
   const toolsNS = props.delegationDnsNamespace || 'kuber';
 
-  const ns = eksr.eks.addManifest(`NS-${eksr.props.baseName}-${toolsNS}`, {
+  const ns = eksr.eks.addManifest(`NS-${eksr.props.baseName}-${toolsNS}-delegation53`, {
     apiVersion: 'v1',
     kind: 'Namespace',
     metadata: { name: toolsNS },

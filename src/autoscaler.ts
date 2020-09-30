@@ -56,7 +56,7 @@ export function autoscaler(stack: cdk.Stack, eksr: EKSResult, props: AutoScalerP
   eksr.eks.addAutoScalingGroup(onDemandASG, {});
 
   const autoscalerNS = props.autoscalerNamespace || 'kuber';
-  const kuberNS = eksr.eks.addManifest(`NS-${eksr.props.baseName}-${autoscalerNS}`, {
+  const kuberNS = eksr.eks.addManifest(`NS-${eksr.props.baseName}-${autoscalerNS}-clusterAS`, {
     apiVersion: 'v1',
     kind: 'Namespace',
     metadata: { name: autoscalerNS },

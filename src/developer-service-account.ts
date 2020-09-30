@@ -17,7 +17,7 @@ export function developerServiceAccount(eksr: EKSResult, props: DeveloperService
     },
   );
 
-  const nsDeveloper = eksr.eks.addManifest(`NS-${eksr.props.baseName}-${developerNS}`, {
+  const nsDeveloper = eksr.eks.addManifest(`NS-${eksr.props.baseName}-${developerNS}-developer`, {
     apiVersion: 'v1',
     kind: 'Namespace',
     metadata: { name: developerNS },
