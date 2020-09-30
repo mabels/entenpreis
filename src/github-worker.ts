@@ -18,12 +18,12 @@ export function githubWorker(
   props: GithubWorkerProps,
 ) {
   const url = new URL(props.url);
-  const workerName = `${url.pathname.replace(/[^a-zA-Z0-9]+/g, '-')}`;
+  const workerName = `${url.pathname.replace(/^\//, '').replace(/[^a-zA-Z0-9]+/g, '-')}`;
   eksr.eks.addManifest(`Deployment-${eksr.props.baseName}-${workerName}`, {
     apiVersion: 'apps/v1',
     kind: 'Deployment',
     metadata: {
-      name: workerName,
+      name: `github-worker-${workerName}`,
       namespace: serviceAccount.serviceAccountNamespace,
       labels: {
         'app.kubernetes.io/name': `github-worker-${workerName}`,
