@@ -86,7 +86,7 @@ export function autoscaler(stack: cdk.Stack, eksr: EKSResult, props: AutoScalerP
         namespace: clusterAS.serviceAccountNamespace,
       },
     ],
-  });
+  }).node.addDependency(kuberNS);
 
   new HelmChart(stack, `HELM-${eksr.props.baseName}-autoscaler`, {
     cluster: eksr.eks,
@@ -107,6 +107,6 @@ export function autoscaler(stack: cdk.Stack, eksr: EKSResult, props: AutoScalerP
         },
       },
     },
-  });
+  }).node.addDependency(kuberNS);
   return onDemandASG;
 }
