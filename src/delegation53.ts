@@ -6,7 +6,7 @@ import { EKSResult } from './eks-stack';
 export interface Delegation53Props {
   readonly delegationDnsNamespace?: string;
   readonly delegation53Image?: string;
-  readonly zones: route53.PublicHostedZone[];
+  readonly zones: route53.IPublicHostedZone[];
   readonly rolesARN: string[];
 }
 export function delegation53(eksr: EKSResult, props: Delegation53Props) {
