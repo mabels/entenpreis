@@ -1,4 +1,5 @@
 import eks = require('@aws-cdk/aws-eks');
+import iam from '@aws-cdk/aws-iam';
 import route53 = require('@aws-cdk/aws-route53');
 import { string } from 'yargs';
 import { EKSResult } from './eks-stack';
@@ -25,6 +26,21 @@ export function delegation53(eksr: EKSResult, props: Delegation53Props) {
     },
   );
   delegation53SA.node.addDependency(ns);
+
+  delegation53SA.addToPolicy(
+    new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: ['route53:ChangeResourceRecordSets'],
+      resources: ['arn:aws:route53:::hostedzone/*'],
+    }),
+  );
+  delegation53SA.addToPolicy(
+    new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: ['route53:ListHostedZones', 'route53:ListResourceRecordSets'],
+      resources: ['*'],
+    }),
+  );
   eksr.eks.addManifest(`Deployment-${eksr.props.baseName}-${toolsNS}-delegation53`, {
     apiVersion: 'apps/v1',
     kind: 'Deployment',
