@@ -27,7 +27,8 @@ export function delegation53(eksr: EKSResult, props: Delegation53Props) {
   delegation53SA.node.addDependency(ns);
   eksr.eks.addManifest(`Deployment-${eksr.props.baseName}-${toolsNS}-delegation53`, {
     apiVersion: 'apps/v1',
-    kind: 'deployment',
+    kind: 'Deployment',
+
     metadata: {
       name: `${toolsNS}-delegation53`,
       namespace: delegation53SA.serviceAccountNamespace,
@@ -63,7 +64,7 @@ export function delegation53(eksr: EKSResult, props: Delegation53Props) {
                 },
                 {
                   name: 'TOPROLEARN',
-                  value: props.rolesARN,
+                  value: props.rolesARN.join(","),
                 },
               ],
               args: ['/bin/sleep', '100000'],

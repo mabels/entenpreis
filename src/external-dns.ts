@@ -112,20 +112,22 @@ export function externalDNS(eksr: EKSResult, props: ExternalDNSProps) {
           },
           spec: {
             serviceAccount: dnsAdmin.serviceAccountName,
-            containers: props.zones.map((zone) => ({
-              name: `edns-${zone.zoneName.replace(/\.+/g, '-')}`,
-              image: externalDnsImage,
-              args: [
-                '--source=service',
-                '--source=ingress',
-                `--domain-filter=${zone.zoneName}`,
-                '--provider=aws',
-                '--policy=upsert-only',
-                '--aws-zone-type=public',
-                '--registry=txt',
-                `--txt-owner-id=${zone.hostedZoneId}`,
-              ],
-            })),
+            containers: [
+              {
+                name: 'externaldns',
+                image: externalDnsImage,
+                args: [
+                  '--source=service',
+                  '--source=ingress',
+                  ...props.zones.map((zone) => `--domain-filter=${zone.zoneName}`),
+                  '--provider=aws',
+                  '--policy=upsert-only',
+                  '--aws-zone-type=public',
+                  '--registry=txt',
+                  `--txt-owner-id=${toolsNS}-externaldns`,
+                ],
+              },
+            ],
             securityContext: {
               fsGroup: 65534,
             },
