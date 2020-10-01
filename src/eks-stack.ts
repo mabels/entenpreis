@@ -11,6 +11,7 @@ export interface EKSProps {
   readonly cidr?: string;
   readonly vpcId?: string;
   readonly developerNS?: string;
+  readonly mastersRoleArns?: string[];
 }
 
 export interface EKSResult {
@@ -41,6 +42,11 @@ export function eksStack(stack: cdk.Stack, props: EKSProps): EKSResult {
     kubectlEnabled: true, // we want to be able to manage k8s resources using CDK
     defaultCapacity: 0, // we want to manage capacity our selves
     version: props.EKSVersion || eks.KubernetesVersion.V1_17,
+
+  });
+
+  props.mastersRoleArns?.forEach(arn => {
+    eksCluster.awsAuth.addMastersRole(iam.Role.fromRoleArn(stack, `Role-eks-masterroles-${arn.replace(/[^a-zA-Z0-9]+/g, '-')}`, arn))
   });
 
   eksCluster.addManifest(`SC-${props.baseName}-gp2-encrypted`, {
