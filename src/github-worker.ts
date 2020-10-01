@@ -103,5 +103,5 @@ export function githubWorker(
         },
       },
     },
-  });
+  }).node.addDependency(serviceAccount);
 }
