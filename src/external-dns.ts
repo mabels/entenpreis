@@ -50,7 +50,7 @@ export function externalDNS(eksr: EKSResult, props: ExternalDNSProps) {
       roleRef: {
         apiGroup: 'rbac.authorization.k8s.io',
         kind: 'ClusterRole',
-        name: dnsAdmin.serviceAccountName,
+        name: `${toolsNS}-externaldns-viewer`,
       },
       subjects: [
         {
