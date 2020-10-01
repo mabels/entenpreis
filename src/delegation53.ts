@@ -1,7 +1,5 @@
-import eks = require('@aws-cdk/aws-eks');
-import iam from '@aws-cdk/aws-iam';
-import route53 = require('@aws-cdk/aws-route53');
-import { string } from 'yargs';
+import iam = require('@aws-cdk/aws-iam');
+import route53 from '@aws-cdk/aws-route53';
 import { EKSResult } from './eks-stack';
 
 export interface Delegation53Props {

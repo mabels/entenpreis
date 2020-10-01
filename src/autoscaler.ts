@@ -53,7 +53,7 @@ export function autoscaler(stack: cdk.Stack, eksr: EKSResult, props: AutoScalerP
   Tags.of(onDemandASG).add('k8s.io/cluster-autoscaler/enabled', 'owned', {
     applyToLaunchedInstances: true,
   });
-  eksr.eks.addAutoScalingGroup(onDemandASG, {});
+  eksr.eks.connectAutoScalingGroupCapacity(onDemandASG, {});
 
   const autoscalerNS = props.autoscalerNamespace || 'kuber';
   const kuberNS = eksr.eks.addManifest(`NS-${eksr.props.baseName}-${autoscalerNS}-clusterAS`, {
