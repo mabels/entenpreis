@@ -11,7 +11,7 @@ export interface EKSProps {
   readonly cidr?: string;
   readonly vpcId?: string;
   readonly developerNS?: string;
-  readonly clusterAdminRoleArn?: string;
+  readonly clusterAdminRoleArns?: string[];
 }
 
 export interface EKSResult {
@@ -31,14 +31,9 @@ export function eksStack(stack: cdk.Stack, props: EKSProps): EKSResult {
     throw Error('we need a vpcid or cidr');
   }
 
-  let clusterAdmin: iam.IRole;
-  if (props.clusterAdminRoleArn) {
-    clusterAdmin = iam.Role.fromRoleArn(stack, `Role-eks-mainroles-${props.clusterAdminRoleArn.replace(/[^a-zA-Z0-9]+/g, '-')}`, props.clusterAdminRoleArn);
-  } else {
-    clusterAdmin = new iam.Role(stack, `Role-${props.baseName}-clusterAdmin`, {
-      assumedBy: new iam.AccountRootPrincipal(),
-    });
-  }
+  const clusterAdmin = new iam.Role(stack, `Role-${props.baseName}-clusterAdmin`, {
+    assumedBy: new iam.AccountRootPrincipal(),
+  });
 
   const eksCluster = new eks.Cluster(stack, `EKS-${props.baseName}`, {
     clusterName: `${props.baseName}`,
@@ -47,6 +42,12 @@ export function eksStack(stack: cdk.Stack, props: EKSProps): EKSResult {
     kubectlEnabled: true, // we want to be able to manage k8s resources using CDK
     defaultCapacity: 0, // we want to manage capacity our selves
     version: props.EKSVersion || eks.KubernetesVersion.V1_17,
+  });
+
+  props.clusterAdminRoleArns?.forEach((i) => {
+    eksCluster.awsAuth.addMastersRole(
+      iam.Role.fromRoleArn(stack, `Role-eks-mainroles-${i.replace(/[^a-zA-Z0-9]+/g, '-')}`, i),
+    );
   });
 
   eksCluster.addManifest(`SC-${props.baseName}-gp2-encrypted`, {
