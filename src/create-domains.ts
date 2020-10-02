@@ -6,7 +6,10 @@ export interface CreateDomainsProps {
   readonly refDomains?: string[];
 }
 
-export function createDomains(stack: cdk.Stack, props: CreateDomainsProps): route53.IPublicHostedZone[] {
+export function createDomains(
+  stack: cdk.Stack,
+  props: CreateDomainsProps,
+): route53.IPublicHostedZone[] {
   const refZones =
     props.refDomains?.map((d) =>
       route53.PublicHostedZone.fromLookup(stack, `ref-${d.split('.').join('-')}`, {

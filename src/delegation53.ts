@@ -71,15 +71,15 @@ export function delegation53(eksr: EKSResult, props: Delegation53Props) {
         spec: {
           serviceAccount: delegation53SA.serviceAccountName,
           containers: [
-            {
-              name: `aws-cli`,
-              image: 'fastandfearless/dev-base-container:latest',
-              args: ['/bin/sleep', '100000'],
-            },
+            // {
+            //   name: `aws-cli`,
+            //   image: 'fastandfearless/dev-base-container:latest',
+            //   args: ['/bin/sleep', '100000'],
+            // },
             {
               name: `aws-delegation53`,
-              image: props.delegation53Image || 'fastandfearless/aws-delegation53',
-              args: ['/bin/sleep', '100000'],
+              image: props.delegation53Image || 'fastandfearless/aws-delegation53:latest',
+              // args: ['/bin/sleep', '100000'],
               env: [
                 {
                   name: 'ZONES',

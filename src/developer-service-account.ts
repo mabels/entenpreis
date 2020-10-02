@@ -1,4 +1,4 @@
-import eks = require('@aws-cdk/aws-eks');
+// import iam = require('@aws-cdk/aws-iam');
 import { ManagedPolicy } from '@aws-cdk/aws-iam';
 import { EKSResult } from './eks-stack';
 
@@ -23,6 +23,8 @@ export function developerServiceAccount(eksr: EKSResult, props: DeveloperService
     },
   );
   devAdmin.node.addDependency(nsDeveloper);
+
+  // devAdmin.role.roleName
 
   devAdmin.role.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess'));
 
