@@ -28,6 +28,14 @@ export function delegation53(eksr: EKSResult, props: Delegation53Props) {
   delegation53SA.addToPolicy(
     new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
+      actions: ['sts:AssumeRole'],
+      resources: ['*'],
+    }),
+  );
+
+  delegation53SA.addToPolicy(
+    new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
       actions: ['route53:ChangeResourceRecordSets'],
       resources: ['arn:aws:route53:::hostedzone/*'],
     }),
@@ -71,17 +79,17 @@ export function delegation53(eksr: EKSResult, props: Delegation53Props) {
             {
               name: `aws-delegation53`,
               image: props.delegation53Image || 'fastandfearless/aws-delegation53',
+              args: ['/bin/sleep', '100000'],
               env: [
                 {
                   name: 'ZONES',
                   value: props.zones.map((i) => i.zoneName).join(','),
                 },
                 {
-                  name: 'TOPROLEARN',
+                  name: 'ROLES',
                   value: props.rolesARN.join(","),
                 },
               ],
-              args: ['/bin/sleep', '100000'],
             },
           ],
           securityContext: {
