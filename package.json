@@ -12,7 +12,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "cdk": "cdk",
+    "cdk": "cd test && cdk",
     "test": "ts-node"
   },
   "bugs": {

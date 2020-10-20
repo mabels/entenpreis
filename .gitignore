@@ -3,6 +3,7 @@
 /pulumi/
 /entenpreis-*.tgz
 /node_modules/
+/test/cdk.out/
 /index.d.ts
 /index.d.ts.map
 /index.js
