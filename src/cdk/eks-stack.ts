@@ -41,7 +41,7 @@ export function eksStack(stack: cdk.Stack, props: EKSProps): EKSResult {
     vpc: myVPC,
     kubectlEnabled: true, // we want to be able to manage k8s resources using CDK
     defaultCapacity: 0, // we want to manage capacity our selves
-    version: props.EKSVersion || eks.KubernetesVersion.V1_17,
+    version: props.EKSVersion || eks.KubernetesVersion.V1_18,
   });
 
   props.clusterAdminRoleArns?.forEach((i) => {

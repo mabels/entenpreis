@@ -1,11 +1,11 @@
 import cdk = require("@aws-cdk/core");
-import { createDomains, CreateDomainsProps } from "./src/create-domains";
-import { EKSProps, eksStack } from "./src/eks-stack";
-import { externalDNS } from "./src/external-dns";
-import { delegation53 } from './src/delegation53';
-import { githubWorker, GithubWorkerProps } from "./src/github-worker";
-import { developerServiceAccount } from "./src/developer-service-account";
-import { autoscaler, AutoScalerProps } from "./src/autoscaler";
+import { createDomains, CreateDomainsProps } from "../cdk/create-domains";
+import { EKSProps, eksStack } from "../cdk/eks-stack";
+import { externalDNS } from "../cdk/external-dns";
+import { delegation53 } from '../cdk/delegation53';
+import { githubWorker, GithubWorkerProps } from "../cdk/github-worker";
+import { developerServiceAccount } from "../cdk/developer-service-account";
+import { autoscaler, AutoScalerProps } from "../cdk/autoscaler";
 import { EbsDeviceVolumeType } from '@aws-cdk/aws-ec2';
 
 export interface StackProps extends cdk.StackProps {

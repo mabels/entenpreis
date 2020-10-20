@@ -1,7 +1,8 @@
-export { createDomains, CreateDomainsProps } from './create-domains';
-export { EKSProps, eksStack } from './eks-stack';
-export { externalDNS } from './external-dns';
-export { delegation53 } from './delegation53';
-export { githubWorker, GithubWorkerProps } from './github-worker';
-export { developerServiceAccount } from './developer-service-account';
-export { autoscaler, AutoScalerProps } from './autoscaler';
+/*
+import * as _pulumi from './pulumi';
+import * as _cdk from './cdk';
+export const cdk = _cdk;
+export const pulumi = _pulumi;
+*/
+export * as pulumi from './pulumi';
+export * as cdk from './cdk';
