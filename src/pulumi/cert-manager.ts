@@ -1,8 +1,9 @@
-import * as aws from "@pulumi/aws";
 import * as k8s from "@pulumi/kubernetes";
 // import * as k8sx from "@pulumi/kubernetesx";
 import { Input, ProviderResource } from "@pulumi/pulumi";
 import { deserializeProperties } from "@pulumi/pulumi/runtime";
+import { buildAffinity } from './build-affinity';
+import { buildServiceAccountRole } from './build-service-account-role';
 
 export interface CertManagerProps {
   readonly version?: string;
@@ -13,45 +14,26 @@ export interface CertManagerProps {
   readonly role?: string;
   readonly accountId: string;
   readonly oidcId: string;
+  readonly nodeGroup?: string;
 }
 
 export async function certManager(props: CertManagerProps) {
   const name = props.name || "cert-manager";
   const nsStr = props.namespace || "cert-manager";
-  let role: Input<aws.iam.Role>;
-  if (props.role) {
-    role = aws.iam.Role.get(props.role, props.role, undefined, {
-      provider: props.provider,
-    });
-  } else {
-    role = new aws.iam.Role(name, {
-      assumeRolePolicy: {
-        Version: "2012-10-17",
-        Statement: [
-          {
-            Action: "sts:AssumeRoleWithWebIdentity",
-            Principal: {
-              Federated:
-                `arn:aws:iam::${props.accountId}:oidc-provider/oidc.eks.eu-central-1.amazonaws.com/id/${props.oidcId}`,
-            },
-            Effect: "Allow",
-            Sid: "",
-            Condition: {
-              StringEquals: {
-                [`oidc.eks.eu-central-1.amazonaws.com/id/${props.oidcId}:sub`]:
-                  `system:serviceaccount:${nsStr}:${name}`,
-                [`oidc.eks.eu-central-1.amazonaws.com/id/${props.oidcId}:aud`]:
-                  "sts.amazonaws.com",
-              },
-            },
-          },
-        ],
-      },
-    });
-  }
-  new aws.iam.RolePolicy("cert-manager-policy", {
-    role: role,
-    policy: {
+
+  const role = await buildServiceAccountRole({
+    ...(props.role ?
+      { existingRole: props.role } :
+      {
+        newRole: {
+          name: name,
+          namespace: nsStr,
+          accountId: props.accountId,
+          oidcId: props.oidcId,
+        }
+      }
+    ),
+    policyDocument: {
       Version: "2012-10-17",
       Statement: [
         {
@@ -72,8 +54,8 @@ export async function certManager(props: CertManagerProps) {
           Action: "route53:ListHostedZonesByName",
           Resource: "*",
         },
-      ],
-    },
+      ]
+    }
   });
 
   const ns = new k8s.core.v1.Namespace(
@@ -106,6 +88,7 @@ export async function certManager(props: CertManagerProps) {
             "eks.amazonaws.com/role-arn": role.arn,
           },
         },
+        ...buildAffinity(props)
       },
     },
     { provider: props.provider, dependsOn: ns }
